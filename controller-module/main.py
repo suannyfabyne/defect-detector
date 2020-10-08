@@ -3,15 +3,25 @@ import os
 from process import initializeChannel, callback
 
 queueToController = "controllerChannel"
+productTypes = ['shirt', 'shoe', 'hat']
+exchange = 'products_exc'
 
 
 def main():
     connection, channel = initializeChannel()
 
-    channel.queue_declare(queue=queueToController)
+    channel.exchange_declare(exchange=exchange, exchange_type='direct')
+    result = channel.queue_declare(queue='', exclusive=True)
+    queue_name = result.method.queue
+
+    for productType in productTypes:
+        channel.queue_bind(
+            exchange=exchange, queue=queue_name, routing_key=productType)
+
     channel.basic_qos(prefetch_count=1)
+
     channel.basic_consume(
-        queue=queueToController, on_message_callback=callback, auto_ack=False)
+        queue=queue_name, on_message_callback=callback, auto_ack=False)
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
 
