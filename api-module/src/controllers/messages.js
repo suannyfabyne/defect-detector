@@ -2,8 +2,15 @@ import { publishToQueue } from "../rabbitmq";
 
 export const sendMessageToQueue = async (req, res) => {
   const message = req.body;
-  await publishToQueue(JSON.stringify(message));
-  console.log(" [x] Sent " + JSON.stringify(message));
+  const messageParsed = JSON.stringify(message);
 
-  res.status(201).send({ msg: "Sended", body: { ...message } });
+  try {
+    await publishToQueue(messageParsed);
+
+    console.log("[x] Sent " + messageParsed);
+    res.status(200).send({ msg: "Sent", body: { ...message } });
+  } catch (e) {
+    console.log(e);
+    res.status(400).send({ msg: "Failed to send" });
+  }
 };

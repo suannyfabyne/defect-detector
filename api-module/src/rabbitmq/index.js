@@ -1,7 +1,8 @@
 import amqp from "amqplib/callback_api";
 
 let channel = null;
-const queue = "apiChannel";
+const queueToController = "controllerChannel";
+const queueToAPI = "apiChannel";
 
 const rabbitConnection = () => {
   amqp.connect("amqp://localhost", (err, conn) => {
@@ -10,13 +11,17 @@ const rabbitConnection = () => {
     conn.createChannel((error, ch) => {
       if (error) throw error;
 
-      ch.assertQueue(queue, {
+      ch.assertQueue(queueToAPI, {
+        durable: false,
+      });
+
+      ch.assertQueue(queueToController, {
         durable: false,
       });
 
       channel = ch;
 
-      consumeFromQueue("controllerChannel");
+      consumeFromQueue(queueToAPI);
     });
   });
 };
@@ -24,7 +29,9 @@ const rabbitConnection = () => {
 rabbitConnection();
 
 export const publishToQueue = async (data) => {
-  channel.sendToQueue(queue, Buffer.from(data), { persistent: true });
+  channel.sendToQueue(queueToController, Buffer.from(data), {
+    persistent: true,
+  });
 };
 
 export const consumeFromQueue = async (queueReceiver) => {
@@ -32,6 +39,7 @@ export const consumeFromQueue = async (queueReceiver) => {
     queueReceiver,
     (msg) => {
       console.log(" [x] Received %s", msg.content.toString());
+      channel.ack(msg);
     },
     {
       noAck: false,
