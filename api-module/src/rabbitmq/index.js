@@ -34,7 +34,7 @@ export const consumeFromQueue = async (queueReceiver) => {
       console.log(" [x] Received %s", msg.content.toString());
     },
     {
-      noAck: true,
+      noAck: false,
     }
   );
 };
