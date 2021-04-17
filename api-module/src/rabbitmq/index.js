@@ -12,6 +12,10 @@ const rabbitConnection = () => {
     conn.createChannel((error, ch) => {
       if (error) throw error;
 
+      ch.assertQueue(queueToAPI, {
+        durable: false,
+      });
+
       ch.assertExchange(exchange, "direct", {
         durable: false,
       });
